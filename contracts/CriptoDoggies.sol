@@ -52,12 +52,67 @@ function createToken(string _name, address _owner, uint256 _price) public onlyCL
     _createToken(_name, _dna, _owner, _price);
 }
 
+function _generateRandomDna() private view returns (bytes5) {
+    uint256 lastBlockNumber =block.number - 1;
+    bytes32 hashVal = bytes32(block.blockhash(lastBlockNumber));
+    bytes5 dna = bytes5(hashVal & 0xffffffff) << 216);
+    return dna;
+
+}
+
 function createToken(string _name) public conlyCLevel {
  bytes5 _dna = _generateRandomDna();
  _createToken(_name, _dna, address(this), startingPrice);
 }
 
+function _createToken(string _name, bytes5 _dna, address _owner, uint256 _price) {
+    Doggy memory _doggy = Doggy({
+        name: _name;
+        dna: _dna
+    });
+    uint256 newTokenId = doggies.push(doggy) - 1;
+    tokenIdToPrice[newTokenId] = _price;
 
+    TokenCreate(newTokenId, _name, _dna, _price, _owner);
+
+    _transfer(address(0), _owner, newTokenId);
+}
+
+function getToken(uint256 _tokenId) public view returns (
+    string _tokenName,
+    bytes5 _dna,
+    uint256 _price,
+    uint256 _nextPrice,
+    address _owner
+
+) {
+    _tokenName = doggies[_tokenId].name;
+    _dna = doggies[_tokenId].dna;
+    _price = tokenIdToPrice[_tokenId];
+    _nextPrice = nextPriceOf(_tokenID);
+    _owner = tokenIdToOwner[tokenId];
+}
+
+function getAllToken() public view returns (
+    uint256[],
+    uint256[],
+    address[]
+) {
+    uint256 total = totalSupply();
+    uint256[] memory prices = new uint256[](total);
+    uint256[] memory nextPrices = new uint256[](total);
+    address[] memory owners = new address[](total);
+
+    for (unit256 i = 0; i < total; i++) {
+        prices[i] = tokenIdToPrice[i];
+        nextPrices[i] = nextPriceOf(i);
+        owners[i] = tokenIdToOwner[i];
+    }
+    return (prices, nextPrices, owners);
+}
+    
+}
+    
 
 
 
