@@ -18,7 +18,7 @@ contract CryptoDoggies is AccessControl, DetailedERC721 {
       string name, 
       bytes5 dna, 
       uint256 sellingPrice, 
-      uint256 newPrice), 
+      uint256 newPrice, 
       address indexed oldOwner, 
       address indexed newOwner
   
@@ -45,8 +45,19 @@ modifier onlyERC721() {
 }
 
 function createToken(string _name, address _owner, uint256 _price) public onlyCLevel {
-    
+    require(_owner != address(0));
+    require(_price >= startingPrice);
+
+    bytes5 _dna = _generateRandomDna();
+    _createToken(_name, _dna, _owner, _price);
 }
+
+function createToken(string _name) public conlyCLevel {
+ bytes5 _dna = _generateRandomDna();
+ _createToken(_name, _dna, address(this), startingPrice);
+}
+
+
 
 
 
