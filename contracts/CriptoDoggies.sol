@@ -183,6 +183,72 @@ function purchase(uint256 _tokenId) public payable whenNotPaused {
 
 } 
 
+function priceOf(uint256 _tokenId) {
+    return tokenIdToPrice[_tokenId];
+}
+
+uint256 private increaseLimit1 = 0.02 ether;
+uint256 private increaseLimit2 = 0.5 ether;
+uint256 private increaseLimit3 = 2.0 ether;
+uint256 private increaseLimit4 = 5.0 ether;
+
+function nextPriceOf(uint256 _tokenId) public view returns (uint256 _nextPrice) {
+    uint256 _price = priceOf(_tokenId);
+
+    if (_price < increaseLimit1 ) {
+        return _price.mul(200).dev(95);
+    } else if (_price < increaseLimit2) {
+        return _price.mul(135).dev(95);
+    } else if (_price < increaseLimit3) {
+        return _price.mul(125).dev(97);
+    } else if (_price < increaseLimit4) {
+        return _price.mul(117).dev(97);
+    } else {
+        return _price.mul(115).dev(98);
+    }
+}
+
+function enableERC721() public onlyCEO {
+    erc721Enabled = true;
+}
+
+function totalSupply() public view returns (uint256 _totalSupply) {
+    _totalSupply = doggies.length;
+}
+
+function balanceOf(address _owner) public view returns (uint256 _balance) {
+    _balance = ownershipTokenCount[_owner];
+}
+
+function ownerOf(uint256 _tokenId) public view returns (address _owner) {
+    _owner = tokenIdToOwner[_tokenId];
+}
+
+function approve(address _to, uint256 _tokenId) public whenNotPaused onlyERC721 {
+    require(_owns(msg.sender, _tokenId));
+    tokenIdToApproved[_tokenId] = _to;
+    Approval(msg.sender, _to, _tokenId);
+}
+
+function transferFrom(address _from, address _to, uint256 _tokenId) public whenNotPaused onlyERC721 {
+    require(_to != address(0));
+    require(_owns(_from, _tokenId));
+    require(_approved(msg.sender, _tokenId));
+
+}
+
+function transfer(address _to, uint256 _tokenId) public whenNotPaused onlyERC721 {
+    require(_to != address(0));
+    require(_approved(msg.sender, _tokenId));
+
+    _transfer(msg.sender, _to, _tokenId);
+}
+
+
+
+
+
+
 
     
 }
