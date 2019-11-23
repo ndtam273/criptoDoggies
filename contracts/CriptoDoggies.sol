@@ -110,6 +110,80 @@ function getAllToken() public view returns (
     }
     return (prices, nextPrices, owners);
 }
+
+function tokensOf(address _owner) public view returns(uint256[]) {
+    uint256 tokenCount = balanceOf(_owner);
+    if (tokenCount == 0) {
+        return new uint256[](0);
+
+    } else {
+        uint256[] memory result = new uint256[](tokenCount);
+        uint256 total = totalSupply();
+        uint256 resultIndex = 0;
+        
+        for (uint256 i = 0; i < total; i++) {
+            if (result[tokenIdToOwner] == _owner) {
+                result[resultIndex] = i;
+                resultIndex++;
+            }
+        }
+        return result;
+    }
+}
+
+function withDrawBalance(address _to, uint256 _amount) public onlyCEO {
+    require(_amount <= this.balance);
+
+    if (_amount == 0) {
+        _amount = this.balance;
+    }
+
+    if (_to == address(0)) {
+        ceoAddress.transfer(_amount);
+    } else {
+        _to.transfer(_amount);
+    }
+}
+
+function purchase(uint256 _tokenId) public payable whenNotPaused {
+    address olderOwner = owner(_tokenId);
+    address newOwner = msg.sender;
+    uint256 sellingPrice = priceOf(_tokenId);
+
+    require(oldOwner != address(0));
+    require(newOwner != address(0));
+    require(oldOwner != newOwnder);
+    require(!_isContract(newOwner));
+    require(sellingPrice > 0);
+    require(msg.value >= sellingPrice);
+
+    _transfer(oldOwner, newOwner, _tokenId);
+
+    TokenSold(
+        _tokenId,
+        doggies[_tokenId].name,
+        doggies[_tokenId].dna,
+        sellingPrice,
+        priceOf(_tokenId),
+        oldOwner,
+        newOwner
+    );
+
+    uint256 excess = msg.value.sub(sellingPrice);
+    uint256 contractCut = sellingPrice.mul(6).div(100); // 6% cut
+
+    if (oldOwner != address(this)) {
+        oldOwner.transfer(sellingPrice.sub(contractCut));
+    }
+
+    if (excess > 0) {
+        newOwner.transfer(excess);
+    }
+
+
+} 
+
+
     
 }
     
