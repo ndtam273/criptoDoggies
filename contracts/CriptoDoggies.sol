@@ -22,7 +22,7 @@ contract CryptoDoggies is AccessControl, DetailedERC721 {
       address indexed oldOwner, 
       address indexed newOwner
   
-};
+  );
 
 mapping (uint256 => address) private tokenIdToOwner; // map tokenId to owner
 mapping (uint256 => uint256) private tokenIdToPrice; // reference price of a token
@@ -243,6 +243,46 @@ function transfer(address _to, uint256 _tokenId) public whenNotPaused onlyERC721
 
     _transfer(msg.sender, _to, _tokenId);
 }
+
+function takeOwnership(uint256 _tokenId) public whenNotPaused onlyERC721{
+    require(_approved(msg.sender, _tokenId));
+    _transfer(tokenIdToOwner[_tokenId], msg.sender, _tokenId);
+
+}
+
+function name() public view returns (string _name) {
+    _name = "CryptoDoggies";
+}
+
+function symbol() public view returns (string _symbol) {
+    _symbol = "CDT";
+}
+
+function _owns(address _claimant, uint256 _tokenId) private view returns (bool) {
+    return tokenIdToOwner[_tokenId] == _claimant;
+}
+
+function _approved(address _to, uint256 _tokenId) private view returns (bool) {
+    return tokenIdToApproved[_tokenId] == _to;
+}
+
+function _transfer(address _from, address _to, uint256 _tokenId) private {
+    ownershipTokenCount[_to]++;
+    tokenIdToOwner[_tokenId] = _to;
+
+    if (_from != address(0)) {
+        ownershipTokenCount[_from]--;
+        delete tokenIdToApproved[_tokenId];
+    }
+    Transfer(_from, _to, _tokenId);
+}
+
+function _isContract(address addr) private view returns  (bool) {
+    uint256 size;
+    assembly {size := extcodesize(addr)}
+    return size > 0;
+}
+
 
 
 
