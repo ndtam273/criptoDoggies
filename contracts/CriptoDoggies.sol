@@ -26,7 +26,7 @@ contract CryptoDoggies is AccessControl, DetailedERC721 {
 
 mapping (uint256 => address) private tokenIdToOwner; // map tokenId to owner
 mapping (uint256 => uint256) private tokenIdToPrice; // reference price of a token
-mapping (address => uint256) private ownershipToTokenCount; // Count token of an owner
+mapping (address => uint256) private ownershipTokenCount; // Count token of an owner
 mapping (uint256 => address) private tokenIdToApproved; // ???
 
 struct Doggy {
@@ -55,25 +55,25 @@ function createToken(string _name, address _owner, uint256 _price) public onlyCL
 function _generateRandomDna() private view returns (bytes5) {
     uint256 lastBlockNumber =block.number - 1;
     bytes32 hashVal = bytes32(block.blockhash(lastBlockNumber));
-    bytes5 dna = bytes5(hashVal & 0xffffffff) << 216);
+    bytes5 dna = bytes5((hashVal & 0xffffffff) << 216);
     return dna;
 
 }
 
-function createToken(string _name) public conlyCLevel {
+function createToken(string _name) public onlyCLevel {
  bytes5 _dna = _generateRandomDna();
  _createToken(_name, _dna, address(this), startingPrice);
 }
 
-function _createToken(string _name, bytes5 _dna, address _owner, uint256 _price) {
+function _createToken(string _name, bytes5 _dna, address _owner, uint256 _price) private {
     Doggy memory _doggy = Doggy({
-        name: _name;
+        name: _name,
         dna: _dna
     });
-    uint256 newTokenId = doggies.push(doggy) - 1;
+    uint256 newTokenId = doggies.push(_doggy) - 1;
     tokenIdToPrice[newTokenId] = _price;
 
-    TokenCreate(newTokenId, _name, _dna, _price, _owner);
+    TokenCreated(newTokenId, _name, _dna, _price, _owner);
 
     _transfer(address(0), _owner, newTokenId);
 }
@@ -89,8 +89,8 @@ function getToken(uint256 _tokenId) public view returns (
     _tokenName = doggies[_tokenId].name;
     _dna = doggies[_tokenId].dna;
     _price = tokenIdToPrice[_tokenId];
-    _nextPrice = nextPriceOf(_tokenID);
-    _owner = tokenIdToOwner[tokenId];
+    _nextPrice = nextPriceOf(_tokenId);
+    _owner = tokenIdToOwner[_tokenId];
 }
 
 function getAllToken() public view returns (
@@ -103,7 +103,7 @@ function getAllToken() public view returns (
     uint256[] memory nextPrices = new uint256[](total);
     address[] memory owners = new address[](total);
 
-    for (unit256 i = 0; i < total; i++) {
+    for (uint256 i = 0; i < total; i++) {
         prices[i] = tokenIdToPrice[i];
         nextPrices[i] = nextPriceOf(i);
         owners[i] = tokenIdToOwner[i];
@@ -122,7 +122,7 @@ function tokensOf(address _owner) public view returns(uint256[]) {
         uint256 resultIndex = 0;
         
         for (uint256 i = 0; i < total; i++) {
-            if (result[tokenIdToOwner] == _owner) {
+            if (tokenIdToOwner[i] == _owner) {
                 result[resultIndex] = i;
                 resultIndex++;
             }
@@ -146,13 +146,13 @@ function withDrawBalance(address _to, uint256 _amount) public onlyCEO {
 }
 
 function purchase(uint256 _tokenId) public payable whenNotPaused {
-    address olderOwner = owner(_tokenId);
+    address oldOwner = ownerOf(_tokenId);
     address newOwner = msg.sender;
     uint256 sellingPrice = priceOf(_tokenId);
 
     require(oldOwner != address(0));
     require(newOwner != address(0));
-    require(oldOwner != newOwnder);
+    require(oldOwner != newOwner);
     require(!_isContract(newOwner));
     require(sellingPrice > 0);
     require(msg.value >= sellingPrice);
@@ -183,7 +183,7 @@ function purchase(uint256 _tokenId) public payable whenNotPaused {
 
 } 
 
-function priceOf(uint256 _tokenId) {
+function priceOf(uint256 _tokenId) public view returns (uint256 _price) {
     return tokenIdToPrice[_tokenId];
 }
 
@@ -196,15 +196,15 @@ function nextPriceOf(uint256 _tokenId) public view returns (uint256 _nextPrice) 
     uint256 _price = priceOf(_tokenId);
 
     if (_price < increaseLimit1 ) {
-        return _price.mul(200).dev(95);
+        return _price.mul(200).div(95);
     } else if (_price < increaseLimit2) {
-        return _price.mul(135).dev(95);
+        return _price.mul(135).div(95);
     } else if (_price < increaseLimit3) {
-        return _price.mul(125).dev(97);
+        return _price.mul(125).div(97);
     } else if (_price < increaseLimit4) {
-        return _price.mul(117).dev(97);
+        return _price.mul(117).div(97);
     } else {
-        return _price.mul(115).dev(98);
+        return _price.mul(115).div(98);
     }
 }
 
@@ -283,14 +283,6 @@ function _isContract(address addr) private view returns  (bool) {
     return size > 0;
 }
 
-
-
-
-
-
-
-
-    
 }
     
 
